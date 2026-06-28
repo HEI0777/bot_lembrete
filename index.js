@@ -7,15 +7,16 @@ const http = require('http')
 
 // Só esses números podem controlar o bot
 const ADMINS = [
-    // '138285095608537@lid', // Henry
-    // '559885003226@s.whatsapp.net', // Henry
-    '559885303729@s.whatsapp.net', // Patrick gay
-    '237121000452280@lid', // Patrick gay
+     '138285095608537@lid', // Henry
+     '559885003226@s.whatsapp.net', // Henry
+    
 ]
 
 // Adiciona os números e lids permitidos a usar o bot tmb
 const ALLOWED_USERS = [
     ...ADMINS,
+    //'559885303729@s.whatsapp.net', // Patrick gay
+    //'237121000452280@lid', // Patrick gay
 ]
 
 const supabase = createClient(

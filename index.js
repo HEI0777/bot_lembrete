@@ -1,5 +1,6 @@
 require('dotenv').config()
 
+let currentQR = null
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys')
 const qrcode = require('qrcode-terminal')
 const { createClient } = require('@supabase/supabase-js')
@@ -7,16 +8,14 @@ const http = require('http')
 
 // Só esses números podem controlar o bot
 const ADMINS = [
-     '138285095608537@lid', // Henry
-     '559885003226@s.whatsapp.net', // Henry
-    
+    '138285095608537@lid', // Henry
+    '559885003226@s.whatsapp.net', // Henry
+    // '559885303729@s.whatsapp.net', // Patrick gay
+    // '237121000452280@lid', // Patrick gay
 ]
-
 // Adiciona os números e lids permitidos a usar o bot tmb
 const ALLOWED_USERS = [
     ...ADMINS,
-    //'559885303729@s.whatsapp.net', // Patrick gay
-    //'237121000452280@lid', // Patrick gay
 ]
 
 const supabase = createClient(
@@ -41,8 +40,8 @@ async function connectToWhatsApp() {
 
     sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
         if (qr) {
-            console.log('Escaneie o QR code abaixo:')
-            qrcode.generate(qr, { small: true })
+            currentQR = qr
+            console.log('QR code disponível em /qr')
         }
 
         if (connection === 'close') {
@@ -52,6 +51,7 @@ async function connectToWhatsApp() {
         }
 
         if (connection === 'open') {
+            currentQR = null
             console.log('WhatsApp conectado!')
         }
     })
@@ -352,9 +352,30 @@ async function runDispatcher() {
     }
 }
 
-const server = http.createServer((req, res) => {
-    res.writeHead(200)
-    res.end('Bot rodando!')
+const QRCode = require('qrcode')
+
+const server = http.createServer(async (req, res) => {
+    if (req.url === '/qr' && currentQR) {
+        const qrImage = await QRCode.toDataURL(currentQR)
+        res.writeHead(200, { 'Content-Type': 'text/html' })
+        res.end(`
+            <html>
+                <body style="display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#111;">
+                    <div style="text-align:center;">
+                        <h2 style="color:white;font-family:sans-serif;">Escaneie o QR Code</h2>
+                        <img src="${qrImage}" style="width:300px;height:300px;">
+                        <p style="color:#aaa;font-family:sans-serif;">WhatsApp > Aparelhos conectados > Conectar um aparelho</p>
+                    </div>
+                </body>
+            </html>
+        `)
+    } else if (req.url === '/qr' && !currentQR) {
+        res.writeHead(200, { 'Content-Type': 'text/html' })
+        res.end(`<html><body style="background:#111;color:white;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;"><h2>Bot já conectado!</h2></body></html>`)
+    } else {
+        res.writeHead(200)
+        res.end('Bot rodando!')
+    }
 })
 server.listen(process.env.PORT || 3000)
 

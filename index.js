@@ -378,7 +378,7 @@ async function runDispatcher() {
 
     const now = new Date().toISOString()
     const result = await supabase.from('reminders').select('*').eq('active', true).lte('next_send_at', now)
-    if (!result.data) return
+    if (!result.data || result.data.length === 0) return
 
     for (const reminder of result.data) {
         try {
@@ -396,7 +396,8 @@ async function runDispatcher() {
             }
             console.log(`Lembrete enviado para ${reminder.contact}`)
         } catch (err) {
-            console.error(`Erro ao enviar lembrete para ${reminder.contact}:`, err.message)
+            console.error(`Erro ao enviar para ${reminder.contact}: ${err.message}`)
+            // Não marca como enviado — vai tentar de novo no próximo ciclo
         }
     }
 }
